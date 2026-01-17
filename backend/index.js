@@ -18,7 +18,6 @@ db.connect((err) => {
     else console.log("✅ Database Connected!");
 });
 
-// 1. Balance API
 app.get("/balance", (req, res) => {
     db.query("SELECT * FROM users", (err, data) => {
         if (err) return res.json(err);
@@ -26,7 +25,7 @@ app.get("/balance", (req, res) => {
     });
 });
 
-// 2. Signup API
+
 app.post("/create-user", (req, res) => {
     const q = "INSERT INTO users (`username`, `balance`) VALUES (?)";
     const values = [req.body.username, req.body.balance];
@@ -36,7 +35,7 @@ app.post("/create-user", (req, res) => {
     });
 });
 
-// 3. Transfer API (Ab History bhi save karega) 📝
+
 app.post("/transfer", (req, res) => {
     const { senderName, receiverName, amount } = req.body;
 
@@ -46,22 +45,22 @@ app.post("/transfer", (req, res) => {
         if (data.length === 0) return res.json({ message: "Sender nahi mila!" });
         if (data[0].balance < amount) return res.json({ message: "❌ Balance kam hai." });
 
-        // Paise Kaato
+        
         const deductQuery = "UPDATE users SET balance = balance - ? WHERE username = ?";
         db.query(deductQuery, [amount, senderName], (err) => {
             if (err) return res.json(err);
 
-            // Paise Jodo
+            
             const addQuery = "UPDATE users SET balance = balance + ? WHERE username = ?";
             db.query(addQuery, [amount, receiverName], (err) => {
                 if (err) return res.json(err);
 
-                // --- NEW: History Save Karo ---
+               
                 const historyQuery = "INSERT INTO transactions (`sender`, `receiver`, `amount`) VALUES (?)";
                 const values = [senderName, receiverName, amount];
                 
                 db.query(historyQuery, [values], (err) => {
-                     if (err) console.log(err); // Error aaye to print karo par roko mat
+                     if (err) console.log(err); 
                      return res.json({ message: "✅ Transaction Successful!" });
                 });
             });
@@ -69,9 +68,8 @@ app.post("/transfer", (req, res) => {
     });
 });
 
-// 4. History API (Naya Feature) 📜
+
 app.get("/transactions", (req, res) => {
-    // Latest transaction sabse upar dikhega (ORDER BY id DESC)
     const q = "SELECT * FROM transactions ORDER BY id DESC";
     db.query(q, (err, data) => {
         if (err) return res.json(err);
